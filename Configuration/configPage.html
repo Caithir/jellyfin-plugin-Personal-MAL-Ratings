@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Personal MAL Ratings</title>
+</head>
+<body>
+    <div id="PersonalMALRatingsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="PersonalMALRatingsConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">Personal MAL Ratings Configuration</h2>
+                    </div>
+                    
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">MyAnimeList API Settings</h3>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtMALUsername">MAL Username</label>
+                            <input id="txtMALUsername" name="txtMALUsername" type="text" is="emby-input" class="emby-input" />
+                            <div class="fieldDescription">Your MyAnimeList username (for reference only)</div>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtMALClientId">MAL Client ID</label>
+                            <input id="txtMALClientId" name="txtMALClientId" type="text" is="emby-input" class="emby-input" />
+                            <div class="fieldDescription">Your MAL API Client ID (register at https://myanimelist.net/apiconfig/create)</div>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtMALAccessToken">MAL Access Token</label>
+                            <input id="txtMALAccessToken" name="txtMALAccessToken" type="password" is="emby-input" class="emby-input" />
+                            <div class="fieldDescription">Your MAL API Access Token (obtain through OAuth2 flow)</div>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtMALRefreshToken">MAL Refresh Token</label>
+                            <input id="txtMALRefreshToken" name="txtMALRefreshToken" type="password" is="emby-input" class="emby-input" />
+                            <div class="fieldDescription">Your MAL API Refresh Token (for automatic token renewal)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Plugin Settings</h3>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkEnabledForAnime" name="chkEnabledForAnime" type="checkbox" is="emby-checkbox" />
+                                <span>Enable for Anime</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enable rating override for anime series</div>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkOverwriteExistingRatings" name="chkOverwriteExistingRatings" type="checkbox" is="emby-checkbox" />
+                                <span>Overwrite Existing Ratings</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Replace existing community ratings with your personal MAL ratings</div>
+                        </div>
+                        
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="selectRefreshInterval">Refresh Interval</label>
+                            <select id="selectRefreshInterval" name="selectRefreshInterval" is="emby-select" class="emby-select-withcolor emby-select">
+                                <option value="1">1 hour</option>
+                                <option value="6">6 hours</option>
+                                <option value="12">12 hours</option>
+                                <option value="24">24 hours</option>
+                                <option value="48">48 hours</option>
+                                <option value="168">1 week</option>
+                            </select>
+                            <div class="fieldDescription">How often to refresh your MAL anime list</div>
+                        </div>
+                    </div>
+                    
+                    <div class="verticalSection">
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                        
+                        <button id="btnTestConnection" type="button" class="raised button-submit block emby-button" style="margin-top: 1em;">
+                            <span>Test MAL Connection</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+            (function () {
+                var pluginId = "85E35A5A-8C2D-4F3A-9B1E-7F8D6C4E2A91";
+
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    document.querySelector('#txtMALUsername').value = config.MALUsername || '';
+                    document.querySelector('#txtMALClientId').value = config.MALClientId || '';
+                    document.querySelector('#txtMALAccessToken').value = config.MALAccessToken || '';
+                    document.querySelector('#txtMALRefreshToken').value = config.MALRefreshToken || '';
+                    document.querySelector('#chkEnabledForAnime').checked = config.EnabledForAnime !== false;
+                    document.querySelector('#chkOverwriteExistingRatings').checked = config.OverwriteExistingRatings !== false;
+                    document.querySelector('#selectRefreshInterval').value = config.RefreshIntervalHours || 24;
+                });
+
+                document.querySelector('#PersonalMALRatingsConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    
+                    var config = {
+                        MALUsername: document.querySelector('#txtMALUsername').value,
+                        MALClientId: document.querySelector('#txtMALClientId').value,
+                        MALAccessToken: document.querySelector('#txtMALAccessToken').value,
+                        MALRefreshToken: document.querySelector('#txtMALRefreshToken').value,
+                        EnabledForAnime: document.querySelector('#chkEnabledForAnime').checked,
+                        OverwriteExistingRatings: document.querySelector('#chkOverwriteExistingRatings').checked,
+                        RefreshIntervalHours: parseInt(document.querySelector('#selectRefreshInterval').value)
+                    };
+
+                    ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
+                        Dashboard.processPluginConfigurationUpdateResult();
+                    });
+                });
+
+                document.querySelector('#btnTestConnection').addEventListener('click', function () {
+                    var accessToken = document.querySelector('#txtMALAccessToken').value;
+                    var clientId = document.querySelector('#txtMALClientId').value;
+                    
+                    if (!accessToken) {
+                        Dashboard.alert('Please enter an access token first.');
+                        return;
+                    }
+                    
+                    this.disabled = true;
+                    this.innerHTML = '<span>Testing...</span>';
+                    
+                    fetch('https://api.myanimelist.net/v2/users/@me', {
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                            'X-MAL-Client-ID': clientId || ''
+                        }
+                    }).then(function(response) {
+                        document.querySelector('#btnTestConnection').disabled = false;
+                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection</span>';
+                        
+                        if (response.ok) {
+                            Dashboard.alert('Connection successful!');
+                        } else {
+                            Dashboard.alert('Connection failed. Please check your credentials.');
+                        }
+                    }).catch(function() {
+                        document.querySelector('#btnTestConnection').disabled = false;
+                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection</span>';
+                        Dashboard.alert('Connection failed. Please check your credentials.');
+                    });
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>
