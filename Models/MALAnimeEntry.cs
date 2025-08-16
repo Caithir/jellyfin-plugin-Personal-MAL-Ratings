@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.PersonalMALRatings.Models;

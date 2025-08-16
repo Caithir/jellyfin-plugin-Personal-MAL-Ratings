@@ -1,11 +1,18 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Jellyfin.Plugin.PersonalMALRatings.Models;
 using Jellyfin.Plugin.PersonalMALRatings.Services;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.PersonalMALRatings.Providers;
 
@@ -17,18 +24,23 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
     private readonly ILogger<PersonalMALRatingProvider> _logger;
     private readonly MALApiClient _malApiClient;
     private readonly AnimeMatchingService _matchingService;
+    private readonly ILoggerFactory _loggerFactory;
     private static readonly object CacheLock = new();
     private static List<MALAnimeEntry>? _cachedEntries;
     private static DateTime _lastCacheUpdate = DateTime.MinValue;
 
     public string Name => "Personal MAL Rating Provider";
 
-    public PersonalMALRatingProvider(IHttpClientFactory httpClientFactory, ILogger<PersonalMALRatingProvider> logger)
+    public PersonalMALRatingProvider(IHttpClientFactory httpClientFactory, ILogger<PersonalMALRatingProvider> logger, ILoggerFactory loggerFactory)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _malApiClient = new MALApiClient(_httpClientFactory.CreateClient(), logger);
-        _matchingService = new AnimeMatchingService(logger);
+        _loggerFactory = loggerFactory;
+        var httpClient = _httpClientFactory.CreateClient();
+        var malLogger = _loggerFactory.CreateLogger<MALApiClient>();
+        var matchingLogger = _loggerFactory.CreateLogger<AnimeMatchingService>();
+        _malApiClient = new MALApiClient(httpClient, malLogger);
+        _matchingService = new AnimeMatchingService(matchingLogger);
     }
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -96,11 +108,10 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
 
             var season = new Season
             {
-                Name = info.Name,
-                SeriesName = info.SeriesName
+                Name = info.Name
             };
 
-            var searchName = !string.IsNullOrEmpty(info.SeriesName) ? info.SeriesName : info.Name;
+            var searchName = info.Name;
             var tempSeries = new Series { Name = searchName };
             
             var match = _matchingService.FindMatch(tempSeries, malEntries);
@@ -144,11 +155,10 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
 
             var episode = new Episode
             {
-                Name = info.Name,
-                SeriesName = info.SeriesName
+                Name = info.Name
             };
 
-            var searchName = !string.IsNullOrEmpty(info.SeriesName) ? info.SeriesName : info.Name;
+            var searchName = info.Name;
             var tempSeries = new Series { Name = searchName };
             
             var match = _matchingService.FindMatch(tempSeries, malEntries);
