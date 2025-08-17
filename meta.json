@@ -6,7 +6,7 @@
   "name": "Personal MAL Ratings",
   "overview": "This plugin fetches your personal anime ratings from MyAnimeList and uses them to override the community ratings in Jellyfin for your anime library.",
   "owner": "jellyfin-plugin-personal-mal-ratings",
-  "targetAbi": "10.9.0.0",
+  "targetAbi": "10.10.7.0",
   "timestamp": "2025-08-16T00:00:00.0000000Z",
-  "version": "1.0.0.0"
+  "version": "1.4.0.0"
 }
