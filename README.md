@@ -1,74 +1,44 @@
 # Jellyfin Plugin: Personal MAL Ratings
 
-This Jellyfin plugin fetches your personal anime ratings from MyAnimeList (MAL) and uses them to override the community ratings in your Jellyfin anime library.
+[![Latest Release](https://img.shields.io/github/v/release/YOUR_USERNAME/jellyfin-plugin-personal-mal-ratings)](https://github.com/YOUR_USERNAME/jellyfin-plugin-personal-mal-ratings/releases)
+[![Jellyfin Version](https://img.shields.io/badge/jellyfin-10.10.7%2B-blue)](https://jellyfin.org/)
+
+A Jellyfin plugin that integrates with the MyAnimeList (MAL) API v2 to fetch your personal anime ratings and override community ratings in Jellyfin with your own scores.
 
 ## Features
 
-- Fetches your personal anime ratings from MyAnimeList using the official MAL API v2
-- Automatically matches Jellyfin anime series with your MAL anime list entries
-- Overwrites community ratings with your personal MAL scores
-- Configurable refresh intervals for updating ratings
-- Supports Series, Seasons, and Episodes
-- Intelligent anime matching using titles, alternative titles, and synonyms
-- Caching to minimize API calls and improve performance
-
-## Requirements
-
-- Jellyfin 10.9.0 or higher
-- MyAnimeList account
-- MAL API Client ID and Access Token
+- 🔐 **OAuth2 Authentication** - Secure integration with MyAnimeList API v2
+- 🎯 **Intelligent Matching** - Multi-tier algorithm (Exact → Normalized → Fuzzy) for accurate anime identification
+- 💾 **Smart Caching** - Configurable refresh intervals (1-168 hours) with automatic token refresh
+- 📊 **Comprehensive Logging** - Detailed file-based logging for debugging and monitoring
+- 🌐 **Web Interface** - Built-in testing tools and configuration management
+- ⚡ **Real-time Testing** - Force metadata updates and cache refresh via web buttons
 
 ## Installation
 
-1. Download the latest release
-2. Copy the `Jellyfin.Plugin.PersonalMALRatings.dll` to your Jellyfin plugins directory:
-   - Windows: `%UserProfile%\AppData\Local\jellyfin\plugins` or `%ProgramData%\Jellyfin\Server\plugins`
-   - Linux: `/var/lib/jellyfin/plugins/`
+### Method 1: Plugin Repository (Recommended)
+
+1. Open **Jellyfin Dashboard** → **Plugins** → **Repositories**
+2. Add custom repository:
+   - **Repository Name**: `Personal MAL Ratings`
+   - **Repository URL**: `https://raw.githubusercontent.com/YOUR_USERNAME/jellyfin-plugin-personal-mal-ratings/main/manifest.json`
+3. Go to **Catalog** and install **Personal MAL Ratings**
+
+### Method 2: Manual Installation
+
+1. Download the latest release: [jellyfin-plugin-personal-mal-ratings_1.4.0.0.zip](https://github.com/YOUR_USERNAME/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.0/jellyfin-plugin-personal-mal-ratings_1.4.0.0.zip)
+2. Extract `Jellyfin.Plugin.PersonalMALRatings.dll` to your Jellyfin plugins directory
 3. Restart Jellyfin
-4. Navigate to Dashboard > Plugins > Personal MAL Ratings to configure
 
-## Configuration
+## Quick Start
 
-### Setting up MAL API Access
-
-1. Register your application at https://myanimelist.net/apiconfig/create
-2. Obtain your Client ID from the registered application
-3. Use OAuth2 flow to get Access Token and Refresh Token
-4. Enter these credentials in the plugin configuration page
-
-### Plugin Settings
-
-- **MAL Username**: Your MyAnimeList username (for reference)
-- **MAL Client ID**: Your registered application's Client ID
-- **MAL Access Token**: OAuth2 access token for API access
-- **MAL Refresh Token**: OAuth2 refresh token for automatic renewal
-- **Enable for Anime**: Enable rating override for anime content
-- **Overwrite Existing Ratings**: Replace existing community ratings
-- **Refresh Interval**: How often to update your MAL anime list (1-168 hours)
-
-## How It Works
-
-1. The plugin fetches your complete anime list from MAL API
-2. For each anime in your Jellyfin library, it attempts to match with your MAL entries using:
-   - Exact title matching
-   - Alternative/English title matching
-   - Normalized title matching (removes special characters, years, etc.)
-   - Fuzzy matching based on significant words
-3. When a match is found, your personal MAL score (1-10) is applied as the community rating
-4. Results are cached based on your configured refresh interval
-
-## Building from Source
-
-```bash
-git clone https://github.com/your-repo/jellyfin-plugin-Personal-MAL-Ratings
-cd jellyfin-plugin-Personal-MAL-Ratings
-dotnet build --configuration Release
-```
+1. **Install plugin** via repository or manual download
+2. **Register MAL app** at https://myanimelist.net/apiconfig/create
+3. **Get OAuth tokens** using included `mal-auth.http` file
+4. **Configure plugin** in Jellyfin Dashboard → Plugins
+5. **Test connection** using built-in web buttons
+6. **Enjoy** your personal ratings in Jellyfin!
 
 ## License
 
-This project is licensed under the GPL-3.0 License - see the LICENSE file for details.
-
-## Disclaimer
-
-This plugin is not affiliated with MyAnimeList or Jellyfin. Use at your own risk.
+This project is licensed under the MIT License.
