@@ -2,7 +2,7 @@
 name: "Personal MAL Ratings"
 guid: "85E35A5A-8C2D-4F3A-9B1E-7F8D6C4E2A91"
 version: "1.0.0.0"
-jellyfin_version: "10.9.0"
+jellyfin_version: "10.10.7"
 nicename: "Personal MAL Ratings"
 description: "Overwrites community ratings with your personal MyAnimeList anime ratings"
 overview: "This plugin fetches your personal anime ratings from MyAnimeList and uses them to override the community ratings in Jellyfin for your anime library."

@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>Personal MAL Ratings</title>
+    <!-- Version 1.1.0 with Test Buttons -->
+    <meta name="cache-bust" content="20250117-v1.2.0">
 </head>
 <body>
     <div id="PersonalMALRatingsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
@@ -84,8 +86,20 @@
                         </button>
                         
                         <button id="btnTestConnection" type="button" class="raised button-submit block emby-button" style="margin-top: 1em;">
-                            <span>Test MAL Connection</span>
+                            <span>Test MAL Connection & Generate Logs</span>
                         </button>
+                        
+                        <button id="btnRefreshCache" type="button" class="raised button-submit block emby-button" style="margin-top: 0.5em;">
+                            <span>Force Cache Refresh</span>
+                        </button>
+                        
+                        <button id="btnForceMetadata" type="button" class="raised button-submit block emby-button" style="margin-top: 0.5em;">
+                            <span>Force Metadata Updates on Anime</span>
+                        </button>
+                        
+                        <div id="testResults" style="margin-top: 1em; padding: 1em; border-radius: 4px; display: none;">
+                            <div id="testMessage"></div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -123,36 +137,94 @@
                     });
                 });
 
+                function showTestResult(success, message) {
+                    var resultsDiv = document.querySelector('#testResults');
+                    var messageDiv = document.querySelector('#testMessage');
+                    
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.style.backgroundColor = success ? '#d4edda' : '#f8d7da';
+                    resultsDiv.style.borderColor = success ? '#c3e6cb' : '#f5c6cb';
+                    resultsDiv.style.color = success ? '#155724' : '#721c24';
+                    
+                    messageDiv.textContent = message;
+                }
+
                 document.querySelector('#btnTestConnection').addEventListener('click', function () {
                     var accessToken = document.querySelector('#txtMALAccessToken').value;
-                    var clientId = document.querySelector('#txtMALClientId').value;
                     
                     if (!accessToken) {
-                        Dashboard.alert('Please enter an access token first.');
+                        showTestResult(false, 'Please enter an access token first.');
                         return;
                     }
                     
                     this.disabled = true;
-                    this.innerHTML = '<span>Testing...</span>';
+                    this.innerHTML = '<span>Testing & Generating Logs...</span>';
                     
-                    fetch('https://api.myanimelist.net/v2/users/@me', {
+                    fetch(ApiClient.getUrl('Plugins/PersonalMALRatings/test'), {
+                        method: 'POST',
                         headers: {
-                            'Authorization': 'Bearer ' + accessToken,
-                            'X-MAL-Client-ID': clientId || ''
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"',
+                            'Content-Type': 'application/json'
                         }
                     }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
                         document.querySelector('#btnTestConnection').disabled = false;
-                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection</span>';
+                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection & Generate Logs</span>';
                         
-                        if (response.ok) {
-                            Dashboard.alert('Connection successful!');
-                        } else {
-                            Dashboard.alert('Connection failed. Please check your credentials.');
-                        }
-                    }).catch(function() {
+                        showTestResult(data.Success, data.Message);
+                    }).catch(function(error) {
                         document.querySelector('#btnTestConnection').disabled = false;
-                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection</span>';
-                        Dashboard.alert('Connection failed. Please check your credentials.');
+                        document.querySelector('#btnTestConnection').innerHTML = '<span>Test MAL Connection & Generate Logs</span>';
+                        showTestResult(false, 'Test failed: ' + error.message);
+                    });
+                });
+
+                document.querySelector('#btnRefreshCache').addEventListener('click', function () {
+                    this.disabled = true;
+                    this.innerHTML = '<span>Refreshing...</span>';
+                    
+                    fetch(ApiClient.getUrl('Plugins/PersonalMALRatings/refresh'), {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        document.querySelector('#btnRefreshCache').disabled = false;
+                        document.querySelector('#btnRefreshCache').innerHTML = '<span>Force Cache Refresh</span>';
+                        
+                        showTestResult(data.Success, data.Message);
+                    }).catch(function(error) {
+                        document.querySelector('#btnRefreshCache').disabled = false;
+                        document.querySelector('#btnRefreshCache').innerHTML = '<span>Force Cache Refresh</span>';
+                        showTestResult(false, 'Cache refresh failed: ' + error.message);
+                    });
+                });
+
+                document.querySelector('#btnForceMetadata').addEventListener('click', function () {
+                    this.disabled = true;
+                    this.innerHTML = '<span>Processing Anime...</span>';
+                    
+                    fetch(ApiClient.getUrl('Plugins/PersonalMALRatings/force-metadata'), {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        document.querySelector('#btnForceMetadata').disabled = false;
+                        document.querySelector('#btnForceMetadata').innerHTML = '<span>Force Metadata Updates on Anime</span>';
+                        
+                        showTestResult(data.Success, data.Message);
+                    }).catch(function(error) {
+                        document.querySelector('#btnForceMetadata').disabled = false;
+                        document.querySelector('#btnForceMetadata').innerHTML = '<span>Force Metadata Updates on Anime</span>';
+                        showTestResult(false, 'Metadata updates failed: ' + error.message);
                     });
                 });
             })();
