@@ -1,0 +1,93 @@
+# MyAnimeList API v2 OAuth2 Authentication
+# Documentation: https://myanimelist.net/apiconfig/references/api/v2
+
+### Variables - UPDATE THESE WITH YOUR VALUES
+@clientId = 8bcbcb84ffd34458c29b8777ed521f44
+@MAL_CLIENT_ID = 8bcbcb84ffd34458c29b8777ed521f44
+@REDIRECT_URI = http://localhost/callback
+@CODE_VERIFIER = dBjftJeZ4CVP-mB92k27uhbUJU1p1r_wW1gFWFOE52jXk
+@authCode = def50200a660dc02c107737462beb87b2088031987ed97e34ea0440c8f71cf1ad3ad97ca74b34f607c78745f7a112e5889ddf751f610d3c232e9be0311c9bdecc7886ab53679cd03a86b6c1ca653654cb13ccf00a604f20fda661cb0930ddf1c713099476e0cd6342386b07aec72e2c867386446cb63e35a04dda12394d633b42dbfef7d71158810e73655f7400744f2e979244f91ef7217ba914229ffe2dc01b6cf784f173befa925cbe1a0a1a55a620907554130b21cd2f13ee98a6d696ee5db670c73830d9b3e6b8536c55eed08248c9a3224bceef5ce119d07c06a0ee0b0bec20924f6955eda0073937d28d267a72fea9027e9639c4129e09441eea497bd1bd03439ec69c406af5739e62590b50bfa2bcb4b5ce67d076e82b6d812c086a3761ba9bc1ee003c7f7118b0090947fc59ff0e15d1a12616556ba24a8943a413b9139b43736084edc1afb3016e598b7f31ca68a767fcbb9f58feb37696835ca98611d750dea855e867cf53b12042521feb86a05ed83cdd5272422cf04a6c138f6f81642445ef530544e44dd64064f8b35a861cc0cfeb142c49c028159d23a4c63961388ee6935343d57764d0279c1d6e4&state=optional_csrf_token
+@refreshToken = YOUR_REFRESH_TOKEN_HERE
+
+@AUTH_CODE = paste-code-here
+
+@access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjI2NmJmMTZlNWM5NTFhNGI3ZTI2ZWMzNGU4Y2Q0YThhMjU5NDk2Zjc3ODIxOWM5ZDZlMWIyNTMyNDBjNDAzZWUwNGU5NmVlNjE0N2YyMWUzIn0.eyJhdWQiOiI4YmNiY2I4NGZmZDM0NDU4YzI5Yjg3NzdlZDUyMWY0NCIsImp0aSI6IjI2NmJmMTZlNWM5NTFhNGI3ZTI2ZWMzNGU4Y2Q0YThhMjU5NDk2Zjc3ODIxOWM5ZDZlMWIyNTMyNDBjNDAzZWUwNGU5NmVlNjE0N2YyMWUzIiwiaWF0IjoxNzU1Mzk2NjMwLCJuYmYiOjE3NTUzOTY2MzAsImV4cCI6MTc1ODA3NTAzMCwic3ViIjoiNzk1ODQ5OSIsInNjb3BlcyI6W119.EWiP781vpGlUFPKIERPz1Q0F-ZpDmIGRcYPqNZS9_L-t3RTeFQsmYFgOcIPl10mxtuEkz8ryK05iCCOPXt6aW07xxQEEQDFYIWGL55sE5ZTVdjNqGOrZg4JF33UsuAkjJCLGEXMTXGBLve3PIlbUkg3CHrrfO-3sDAW0XNqLvoRt8Kyfkz46vcUxMDc9XKdfbWOH4BpvjUX8WjWBibS54YTaqr0f5-9rXIER32kZLuRwAcnoZuzrwxtEGvf3JCVV87oHfqooYk5AsZ8nGPSKjOdyQK38YYsHTlEKVdB3TZNSJb-ZZ7rzUbSHrDCYNmKPa1CMHm4THBq9hwcj4t1f4Q
+
+POST https://myanimelist.net/v1/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{MAL_CLIENT_ID}}&grant_type=authorization_code&code={{AUTH_CODE}}&redirect_uri={{REDIRECT_URI}}&code_verifier={{CODE_VERIFIER}}
+
+### get code token
+GET https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=8bcbcb84ffd34458c29b8777ed521f44&code_challenge=dBjftJeZ4CVP-mB92k27uhbUJU1p1r_wW1gFWFOE52jXk&code_challenge_method=plain&redirect_uri=http://localhost/callback&state=optional_csrf_token
+
+###
+GET https://myanimelist.net/v1/oauth2/authorize?response_type=code
+client_id={{MAL_CLIENT_ID}}
+&code_challenge={{CODE_VERIFIER}}
+&code_challenge_method=plain
+&redirect_uri={{REDIRECT_URI}}
+&state=xyz
+
+
+
+
+http://localhost/callback?code=def50200dd8ae3fcd36f9b507341bd04ab2976ca090430aa86f1e33cbd2ccdd86fe5739181434e8e5b09dbb0f03f417f52ff2eb03d234f898a7e7cb5af137cb4500cdafa1d97a5ed0e51cdc33b8f07b5b6233492118aedaff77649f1fdc12f2e11d87000d9a31336aaec2556df7f62d9659cf8d04bcdd4da8812bb07d55f1b859c7d3c89e4f62b680be1913a8c6987ae86be1b439459252cc94e57b99632e7b6612b773b8f5d6f6fbe63555a0aeb0d884fc5f6841181f2ac5f47bd23b69050a08578cbdbc5290beee8fa17847f8cfc575c34cd312615a19ac85855f62babf7edbc698346f4e4f2cf36380ec8303ef437141611452561aec92dabb73dd4e49bccf31ae4167bb1aa8858b06b4c845a2a2e50d6e5991f1ed0d6976964859f6e3a6bda8cee0385f82f756ada693533f061e6944297c28870c72e617d18699007f4210c5fa25121cfab3addaf14c3481f7749eaaf93098438c4de2f8aa536f945fc85aba5c9632354a6a33b15504022132b9320d9eb2f8c52c445fdcce5f05e225a960968013cf1f126cff5a3047bc94ef2d34409f9605c6eabf307391d459365465b5f97893e6255975786761f0b566bf8be&state=optional_csrf_token
+
+### Step 2: Exchange Authorization Code for Access Token
+POST https://myanimelist.net/v1/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=8bcbcb84ffd34458c29b8777ed521f44&grant_type=authorization_code&code={{authCode}}&redirect_uri={{REDIRECT_URI}}&code_verifier={{CODE_VERIFIER}}
+
+
+### Step 1: Generate Authorization URL (Manual Step)
+# Navigate to this URL in your browser:
+# https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id={{clientId}}&redirect_uri={{redirectUri}}&code_challenge={{codeVerifier}}&code_challenge_method=plain&state=REQUEST_ID
+
+### Step 2: Exchange Authorization Code for Access Token
+GET https://myanimelist.net/v1/oauth2/authorize
+Content-Type: application/x-www-form-urlencoded
+X-MAL-Client-ID: 8bcbcb84ffd34458c29b8777ed521f44
+
+client_id={{clientId}}&client_secret={{clientSecret}}&code={{authCode}}&code_verifier={{codeVerifier}}&grant_type=authorization_code&redirect_uri={{redirectUri}}
+
+
+###
+GET https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status&limit=4
+Authorization: Bearer {{access_token}}'
+
+
+
+
+### Step 3: Refresh Access Token
+POST https://myanimelist.net/v1/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+X-MAL-Client-ID: {{clientId}}
+
+client_id={{clientId}}&client_secret={{clientSecret}}&grant_type=refresh_token&refresh_token={{refreshToken}}
+
+### Step 4: Test API Access - Get User Profile
+GET https://api.myanimelist.net/v2/users/@me
+Authorization: Bearer {{accessToken}}
+X-MAL-Client-ID: {{clientId}}
+
+### Step 5: Test API Access - Get User's Anime List (first 10 entries)
+GET https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status&limit=10
+Authorization: Bearer {{accessToken}}
+X-MAL-Client-ID: {{clientId}}
+
+### Instructions:
+# 1. Register your app at: https://myanimelist.net/apiconfig/create
+# 2. Update variables above with your client credentials
+# 3. Generate a code verifier (43-128 chars, [A-Z][a-z][0-9]-._~ only)
+# 4. Navigate to the authorization URL in Step 1
+# 5. Get the authorization code from the callback
+# 6. Use Step 2 to get access/refresh tokens
+# 7. Test API access with Steps 4-5
+
+### Notes:
+# - Code verifier must be 43-128 characters
+# - Use plain code challenge method (code_challenge = code_verifier)
+# - Always include X-MAL-Client-ID header
+# - Access tokens expire, use refresh token to get new ones
