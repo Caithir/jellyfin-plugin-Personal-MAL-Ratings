@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <AssemblyVersion>1.4.0.3</AssemblyVersion>
-    <FileVersion>1.4.0.3</FileVersion>
+    <AssemblyVersion>1.4.0.7</AssemblyVersion>
+    <FileVersion>1.4.0.7</FileVersion>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -26,5 +26,9 @@
   </ItemGroup>
 
 </Project>
+
+
+
+
 
 

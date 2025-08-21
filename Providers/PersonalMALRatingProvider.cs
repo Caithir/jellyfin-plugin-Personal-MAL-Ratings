@@ -23,7 +23,7 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<PersonalMALRatingProvider> _logger;
     private readonly MALApiClient _malApiClient;
-    private readonly AnimeMatchingService _matchingService;
+    private readonly EnhancedAnimeMatchingService _enhancedMatchingService;
     private readonly ILoggerFactory _loggerFactory;
     private static readonly object CacheLock = new();
     private static List<MALAnimeEntry>? _cachedEntries;
@@ -36,11 +36,24 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _loggerFactory = loggerFactory;
+        
+        // Initialize MAL API client
         var httpClient = _httpClientFactory.CreateClient();
         var malLogger = _loggerFactory.CreateLogger<MALApiClient>();
-        var matchingLogger = _loggerFactory.CreateLogger<AnimeMatchingService>();
         _malApiClient = new MALApiClient(httpClient, malLogger);
-        _matchingService = new AnimeMatchingService(matchingLogger);
+        
+        // Initialize enhanced matching service with all dependencies
+        var shokoLogger = _loggerFactory.CreateLogger<ShokoApiClient>();
+        var mappingLogger = _loggerFactory.CreateLogger<AniDBToMALMappingService>();
+        var stringMatchingLogger = _loggerFactory.CreateLogger<AnimeMatchingService>();
+        var enhancedLogger = _loggerFactory.CreateLogger<EnhancedAnimeMatchingService>();
+        
+        var shokoClient = new ShokoApiClient(_httpClientFactory, shokoLogger);
+        var mappingService = new AniDBToMALMappingService(_httpClientFactory, mappingLogger);
+        var stringMatchingService = new AnimeMatchingService(stringMatchingLogger);
+        
+        _enhancedMatchingService = new EnhancedAnimeMatchingService(
+            enhancedLogger, shokoClient, mappingService, stringMatchingService);
     }
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -86,24 +99,68 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
             _logger.LogDebug("Attempting to match series {SeriesName} (Original: {OriginalTitle}) against {EntryCount} MAL entries", 
                 info.Name, info.OriginalTitle, malEntries.Count);
 
-            var match = _matchingService.FindMatch(series, malEntries);
-            if (match?.ListStatus?.Score > 0)
+            var matchResult = await _enhancedMatchingService.FindMatchAsync(series, malEntries);
+            
+            // Check if we need to process this item (either matched or unmatched with action)
+            if (matchResult.Match != null || matchResult.IsUnmatched)
             {
                 result.Item = series;
                 result.HasMetadata = true;
 
-                var rating = ConvertMALScoreToRating(match.ListStatus.Score);
-                result.Item.CommunityRating = rating;
-                
-                _logger.LogInformation("✓ Updated rating for series '{SeriesName}' to {Rating} (MAL Score: {MALScore}) - matched with '{MALTitle}'", 
-                    info.Name, rating, match.ListStatus.Score, match.Node?.Title);
-                PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", "✓ Updated rating for series '{0}' to {1} (MAL Score: {2}) - matched with '{3}'", 
-                    info.Name, rating, match.ListStatus.Score, match.Node?.Title ?? "Unknown");
+                if (matchResult.IsUnmatched)
+                {
+                    // Handle unmatched shows (not in MAL list at all)
+                    _logger.LogInformation("🔍 Processing unmatched show '{SeriesName}' (not in MAL list)", info.Name);
+                    PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", 
+                        "Processing unmatched show '{0}' (not in MAL list)", info.Name);
+
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogInformation("⭐ Set community rating to 0 for unmatched series '{SeriesName}'", info.Name);
+                        PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", 
+                            "Set community rating to 0 for unmatched series '{0}'", info.Name);
+                    }
+                }
+                else if (matchResult.IsUnrated)
+                {
+                    // Handle unrated shows (in MAL list but no score)
+                    _logger.LogInformation("🔍 Processing unrated show '{SeriesName}' from MAL list", info.Name);
+                    PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", 
+                        "Processing unrated show '{0}' from MAL list", info.Name);
+
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogInformation("⭐ Set community rating to 0 for unrated series '{SeriesName}'", info.Name);
+                        PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", 
+                            "Set community rating to 0 for unrated series '{0}'", info.Name);
+                    }
+                }
+                else if (matchResult.Match?.ListStatus?.Score > 0)
+                {
+                    // Handle rated shows
+                    var rating = ConvertMALScoreToRating(matchResult.Match.ListStatus.Score);
+                    result.Item.CommunityRating = rating;
+                    
+                    _logger.LogInformation("✓ Updated rating for series '{SeriesName}' to {Rating} (MAL Score: {MALScore}) - matched with '{MALTitle}'", 
+                        info.Name, rating, matchResult.Match.ListStatus.Score, matchResult.Match.Node?.Title);
+                    PluginLogger.LogToFile(LogLevel.Information, "PersonalMALRatingProvider", 
+                        "✓ Updated rating for series '{0}' to {1} (MAL Score: {2}) - matched with '{3}'", 
+                        info.Name, rating, matchResult.Match.ListStatus.Score, matchResult.Match.Node?.Title ?? "Unknown");
+                }
+                else
+                {
+                    _logger.LogDebug("Matched series '{SeriesName}' but no valid score to apply", info.Name);
+                    PluginLogger.LogToFile(LogLevel.Debug, "PersonalMALRatingProvider", 
+                        "Matched series '{0}' but no valid score to apply", info.Name);
+                }
             }
             else
             {
-                _logger.LogDebug("No matching MAL entry found for series {SeriesName} or matched entry has no score", info.Name);
-                PluginLogger.LogToFile(LogLevel.Debug, "PersonalMALRatingProvider", "No matching MAL entry found for series {0} or matched entry has no score", info.Name);
+                _logger.LogDebug("No action taken for series {SeriesName}", info.Name);
+                PluginLogger.LogToFile(LogLevel.Debug, "PersonalMALRatingProvider", 
+                    "No action taken for series {0}", info.Name);
             }
         }
         catch (Exception ex)
@@ -140,17 +197,36 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
             var searchName = info.Name;
             var tempSeries = new Series { Name = searchName };
             
-            var match = _matchingService.FindMatch(tempSeries, malEntries);
-            if (match?.ListStatus?.Score > 0)
+            var matchResult = await _enhancedMatchingService.FindMatchAsync(tempSeries, malEntries);
+            if (matchResult.Match != null || matchResult.IsUnmatched)
             {
                 result.Item = season;
                 result.HasMetadata = true;
 
-                var rating = ConvertMALScoreToRating(match.ListStatus.Score);
-                result.Item.CommunityRating = rating;
-                
-                _logger.LogInformation("Updated rating for season {SeasonName} to {Rating} (MAL Score: {MALScore})", 
-                    info.Name, rating, match.ListStatus.Score);
+                if (matchResult.IsUnmatched)
+                {
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogInformation("Set community rating to 0 for unmatched season '{SeasonName}'", info.Name);
+                    }
+                }
+                else if (matchResult.IsUnrated)
+                {
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogInformation("Set community rating to 0 for unrated season '{SeasonName}'", info.Name);
+                    }
+                }
+                else if (matchResult.Match?.ListStatus?.Score > 0)
+                {
+                    var rating = ConvertMALScoreToRating(matchResult.Match.ListStatus.Score);
+                    result.Item.CommunityRating = rating;
+                    
+                    _logger.LogInformation("Updated rating for season {SeasonName} to {Rating} (MAL Score: {MALScore})", 
+                        info.Name, rating, matchResult.Match.ListStatus.Score);
+                }
             }
         }
         catch (Exception ex)
@@ -187,17 +263,36 @@ public class PersonalMALRatingProvider : IRemoteMetadataProvider<Series, SeriesI
             var searchName = info.Name;
             var tempSeries = new Series { Name = searchName };
             
-            var match = _matchingService.FindMatch(tempSeries, malEntries);
-            if (match?.ListStatus?.Score > 0)
+            var matchResult = await _enhancedMatchingService.FindMatchAsync(tempSeries, malEntries);
+            if (matchResult.Match != null || matchResult.IsUnmatched)
             {
                 result.Item = episode;
                 result.HasMetadata = true;
 
-                var rating = ConvertMALScoreToRating(match.ListStatus.Score);
-                result.Item.CommunityRating = rating;
-                
-                _logger.LogDebug("Updated rating for episode {EpisodeName} to {Rating} (MAL Score: {MALScore})", 
-                    info.Name, rating, match.ListStatus.Score);
+                if (matchResult.IsUnmatched)
+                {
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogDebug("Set community rating to 0 for unmatched episode '{EpisodeName}'", info.Name);
+                    }
+                }
+                else if (matchResult.IsUnrated)
+                {
+                    if (matchResult.ShouldSetRatingToZero)
+                    {
+                        result.Item.CommunityRating = 0.0f;
+                        _logger.LogDebug("Set community rating to 0 for unrated episode '{EpisodeName}'", info.Name);
+                    }
+                }
+                else if (matchResult.Match?.ListStatus?.Score > 0)
+                {
+                    var rating = ConvertMALScoreToRating(matchResult.Match.ListStatus.Score);
+                    result.Item.CommunityRating = rating;
+                    
+                    _logger.LogDebug("Updated rating for episode {EpisodeName} to {Rating} (MAL Score: {MALScore})", 
+                        info.Name, rating, matchResult.Match.ListStatus.Score);
+                }
             }
         }
         catch (Exception ex)

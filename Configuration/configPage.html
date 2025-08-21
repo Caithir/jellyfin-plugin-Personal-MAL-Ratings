@@ -47,6 +47,48 @@
                     
                     <div class="verticalSection">
                         <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Shoko Server Integration</h3>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkEnableShokoIntegration" name="chkEnableShokoIntegration" type="checkbox" is="emby-checkbox" />
+                                <span>Enable Shoko Integration</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Use Shoko Server for more accurate anime identification via AniDB</div>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtShokoServerUrl">Shoko Server URL</label>
+                            <input id="txtShokoServerUrl" name="txtShokoServerUrl" type="text" is="emby-input" class="emby-input" placeholder="http://localhost:8111" />
+                            <div class="fieldDescription">URL to your Shoko Server instance (e.g., http://localhost:8111)</div>
+                        </div>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="txtShokoApiKey">Shoko API Key</label>
+                            <input id="txtShokoApiKey" name="txtShokoApiKey" type="password" is="emby-input" class="emby-input" />
+                            <div class="fieldDescription">API key for Shoko Server (optional - leave empty if no authentication required)</div>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkUseShokoAsPrimary" name="chkUseShokoAsPrimary" type="checkbox" is="emby-checkbox" />
+                                <span>Use Shoko as Primary Source</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Try Shoko identification first before falling back to string matching</div>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkFallbackToStringMatching" name="chkFallbackToStringMatching" type="checkbox" is="emby-checkbox" />
+                                <span>Fallback to String Matching</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Use traditional string matching if Shoko identification fails</div>
+                        </div>
+                    </div>
+                    
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
                             <h3 class="sectionTitle">Plugin Settings</h3>
                         </div>
                         
@@ -81,6 +123,28 @@
                     </div>
                     
                     <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Unrated Shows Handling</h3>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkSetUnratedRatingToZero" name="chkSetUnratedRatingToZero" type="checkbox" is="emby-checkbox" />
+                                <span>Set Unrated Shows Community Rating to 0</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">When a show is found in your MAL list but has no personal rating, set its community rating to 0</div>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkSetUnmatchedRatingToZero" name="chkSetUnmatchedRatingToZero" type="checkbox" is="emby-checkbox" />
+                                <span>Set Unmatched Shows Community Rating to 0</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">When a show is NOT found in your MAL list at all, set its community rating to 0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="verticalSection">
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
@@ -95,6 +159,10 @@
                         
                         <button id="btnForceMetadata" type="button" class="raised button-submit block emby-button" style="margin-top: 0.5em;">
                             <span>Force Metadata Updates on Anime</span>
+                        </button>
+                        
+                        <button id="btnTestShoko" type="button" class="raised button-submit block emby-button" style="margin-top: 0.5em;">
+                            <span>Test Shoko Connection</span>
                         </button>
                         
                         <div id="testResults" style="margin-top: 1em; padding: 1em; border-radius: 4px; display: none;">
@@ -117,6 +185,17 @@
                     document.querySelector('#chkEnabledForAnime').checked = config.EnabledForAnime !== false;
                     document.querySelector('#chkOverwriteExistingRatings').checked = config.OverwriteExistingRatings !== false;
                     document.querySelector('#selectRefreshInterval').value = config.RefreshIntervalHours || 24;
+                    
+                    // Shoko settings
+                    document.querySelector('#chkEnableShokoIntegration').checked = config.EnableShokoIntegration === true;
+                    document.querySelector('#txtShokoServerUrl').value = config.ShokoServerUrl || 'http://localhost:8111';
+                    document.querySelector('#txtShokoApiKey').value = config.ShokoApiKey || '';
+                    document.querySelector('#chkUseShokoAsPrimary').checked = config.UseShokoAsprimary !== false;
+                    document.querySelector('#chkFallbackToStringMatching').checked = config.FallbackToStringMatching !== false;
+                    
+                    // Unrated shows settings
+                    document.querySelector('#chkSetUnratedRatingToZero').checked = config.SetUnratedRatingToZero === true;
+                    document.querySelector('#chkSetUnmatchedRatingToZero').checked = config.SetUnmatchedRatingToZero === true;
                 });
 
                 document.querySelector('#PersonalMALRatingsConfigForm').addEventListener('submit', function (e) {
@@ -129,7 +208,18 @@
                         MALRefreshToken: document.querySelector('#txtMALRefreshToken').value,
                         EnabledForAnime: document.querySelector('#chkEnabledForAnime').checked,
                         OverwriteExistingRatings: document.querySelector('#chkOverwriteExistingRatings').checked,
-                        RefreshIntervalHours: parseInt(document.querySelector('#selectRefreshInterval').value)
+                        RefreshIntervalHours: parseInt(document.querySelector('#selectRefreshInterval').value),
+                        
+                        // Shoko settings
+                        EnableShokoIntegration: document.querySelector('#chkEnableShokoIntegration').checked,
+                        ShokoServerUrl: document.querySelector('#txtShokoServerUrl').value,
+                        ShokoApiKey: document.querySelector('#txtShokoApiKey').value,
+                        UseShokoAsprimary: document.querySelector('#chkUseShokoAsPrimary').checked,
+                        FallbackToStringMatching: document.querySelector('#chkFallbackToStringMatching').checked,
+                        
+                        // Unrated shows settings
+                        SetUnratedRatingToZero: document.querySelector('#chkSetUnratedRatingToZero').checked,
+                        SetUnmatchedRatingToZero: document.querySelector('#chkSetUnmatchedRatingToZero').checked
                     };
 
                     ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
@@ -225,6 +315,42 @@
                         document.querySelector('#btnForceMetadata').disabled = false;
                         document.querySelector('#btnForceMetadata').innerHTML = '<span>Force Metadata Updates on Anime</span>';
                         showTestResult(false, 'Metadata updates failed: ' + error.message);
+                    });
+                });
+
+                document.querySelector('#btnTestShoko').addEventListener('click', function () {
+                    var shokoUrl = document.querySelector('#txtShokoServerUrl').value;
+                    var shokoApiKey = document.querySelector('#txtShokoApiKey').value;
+                    
+                    if (!shokoUrl) {
+                        showTestResult(false, 'Please enter a Shoko server URL first.');
+                        return;
+                    }
+                    
+                    this.disabled = true;
+                    this.innerHTML = '<span>Testing Shoko Connection...</span>';
+                    
+                    fetch(ApiClient.getUrl('Plugins/PersonalMALRatings/test-shoko'), {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ShokoServerUrl: shokoUrl,
+                            ShokoApiKey: shokoApiKey
+                        })
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        document.querySelector('#btnTestShoko').disabled = false;
+                        document.querySelector('#btnTestShoko').innerHTML = '<span>Test Shoko Connection</span>';
+                        
+                        showTestResult(data.Success, data.Message);
+                    }).catch(function(error) {
+                        document.querySelector('#btnTestShoko').disabled = false;
+                        document.querySelector('#btnTestShoko').innerHTML = '<span>Test Shoko Connection</span>';
+                        showTestResult(false, 'Shoko test failed: ' + error.message);
                     });
                 });
             })();

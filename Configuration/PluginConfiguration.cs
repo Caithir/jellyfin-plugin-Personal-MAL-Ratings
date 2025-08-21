@@ -17,4 +17,21 @@ public class PluginConfiguration : BasePluginConfiguration
     public int RefreshIntervalHours { get; set; } = 24;
     
     public bool OverwriteExistingRatings { get; set; } = true;
+    
+    // Shoko Server Integration Settings
+    public bool EnableShokoIntegration { get; set; } = false;
+    
+    public string ShokoServerUrl { get; set; } = "http://localhost:8111";
+    
+    public string ShokoApiKey { get; set; } = string.Empty;
+    
+    public bool UseShokoAsprimary { get; set; } = true;
+    
+    public bool FallbackToStringMatching { get; set; } = true;
+    
+    // Unrated Shows Handling  
+    public bool SetUnratedRatingToZero { get; set; } = false;
+    
+    // Unmatched Shows Handling
+    public bool SetUnmatchedRatingToZero { get; set; } = false;
 }

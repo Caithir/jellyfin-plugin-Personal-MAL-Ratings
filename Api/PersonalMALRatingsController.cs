@@ -225,32 +225,50 @@ public class PersonalMALRatingsController : ControllerBase
 
                     processedCount++;
 
-                    if (result.HasMetadata && result.Item?.CommunityRating.HasValue == true)
+                    if (result.HasMetadata && result.Item != null)
                     {
+                        bool hasChanges = false;
                         var oldRating = series.CommunityRating;
-                        var newRating = result.Item.CommunityRating.Value;
-                        
-                        // Check if we should overwrite existing ratings
-                        if (oldRating.HasValue && !config.OverwriteExistingRatings)
+
+                        // Handle rating changes
+                        if (result.Item.CommunityRating.HasValue)
                         {
-                            _logger.LogInformation("API: Skipping {SeriesName} - already has rating {ExistingRating} and overwrite disabled", 
-                                series.Name, oldRating.Value);
-                            PluginLogger.LogToFile(LogLevel.Information, "API", "Skipping {0} - already has rating {1} and overwrite disabled", 
-                                series.Name, oldRating.Value);
+                            var newRating = result.Item.CommunityRating.Value;
+                            
+                            // Check if we should overwrite existing ratings
+                            if (oldRating.HasValue && !config.OverwriteExistingRatings && newRating > 0)
+                            {
+                                _logger.LogInformation("API: Skipping rating for {SeriesName} - already has rating {ExistingRating} and overwrite disabled", 
+                                    series.Name, oldRating.Value);
+                                PluginLogger.LogToFile(LogLevel.Information, "API", "Skipping rating for {0} - already has rating {1} and overwrite disabled", 
+                                    series.Name, oldRating.Value);
+                            }
+                            else
+                            {
+                                series.CommunityRating = newRating;
+                                hasChanges = true;
+                                
+                                if (newRating == 0)
+                                {
+                                    _logger.LogInformation("API: ⭐ Set community rating to 0 for unmatched/unrated series '{SeriesName}'", series.Name);
+                                    PluginLogger.LogToFile(LogLevel.Information, "API", "⭐ Set community rating to 0 for unmatched/unrated series '{0}'", series.Name);
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("API: ✅ RATING UPDATED: {SeriesName} from {OldRating} to {NewRating}", 
+                                        series.Name, oldRating?.ToString() ?? "None", newRating);
+                                    PluginLogger.LogToFile(LogLevel.Information, "API", "✅ RATING UPDATED: {0} from {1} to {2}", 
+                                        series.Name, oldRating?.ToString() ?? "None", newRating);
+                                }
+                            }
                         }
-                        else
+
+
+                        // Save changes to database if any were made
+                        if (hasChanges)
                         {
-                            // Update the actual library item
-                            series.CommunityRating = newRating;
-                            
-                            // Save the changes to the database
                             await _libraryManager.UpdateItemAsync(series, series.GetParent(), ItemUpdateType.MetadataEdit, default);
-                            
                             updatedCount++;
-                            _logger.LogInformation("API: ✅ RATING UPDATED: {SeriesName} from {OldRating} to {NewRating} (MAL Score: {MALScore})", 
-                                series.Name, oldRating?.ToString() ?? "None", newRating, newRating);
-                            PluginLogger.LogToFile(LogLevel.Information, "API", "✅ RATING UPDATED: {0} from {1} to {2} (MAL Score: {3})", 
-                                series.Name, oldRating?.ToString() ?? "None", newRating, newRating);
                         }
                     }
                     else
@@ -287,6 +305,70 @@ public class PersonalMALRatingsController : ControllerBase
             return Ok(new TestConnectionResult { Success = false, Message = error });
         }
     }
+
+    /// <summary>
+    /// Test Shoko server connection
+    /// </summary>
+    /// <param name="request">Shoko test request</param>
+    /// <returns>Test result</returns>
+    [HttpPost("test-shoko")]
+    public async Task<ActionResult<TestConnectionResult>> TestShokoConnection([FromBody] ShokoTestRequest request)
+    {
+        _logger.LogInformation("API: Test Shoko connection requested via web interface");
+        PluginLogger.LogToFile(LogLevel.Information, "API", "Test Shoko connection requested via web interface");
+
+        try
+        {
+            if (string.IsNullOrEmpty(request.ShokoServerUrl))
+            {
+                var error = "Shoko server URL is required";
+                _logger.LogError(error);
+                PluginLogger.LogToFile(LogLevel.Error, "API", error);
+                return BadRequest(new TestConnectionResult { Success = false, Message = error });
+            }
+
+            // Test Shoko connection
+            var shokoLogger = _loggerFactory.CreateLogger<ShokoApiClient>();
+            var shokoClient = new ShokoApiClient(_httpClientFactory, shokoLogger);
+
+            _logger.LogInformation("API: Starting Shoko connection test to: {ShokoUrl}", request.ShokoServerUrl);
+            PluginLogger.LogToFile(LogLevel.Information, "API", "Starting Shoko connection test to: {0}", request.ShokoServerUrl);
+
+            var isConnected = await shokoClient.TestConnectionAsync(request.ShokoServerUrl, request.ShokoApiKey);
+
+            if (!isConnected)
+            {
+                var error = "Shoko server connection failed. Check server URL and ensure Shoko Server is running.";
+                _logger.LogError(error);
+                PluginLogger.LogToFile(LogLevel.Error, "API", error);
+                return Ok(new TestConnectionResult { Success = false, Message = error });
+            }
+
+            // Test searching for a sample anime
+            _logger.LogInformation("API: Testing Shoko anime search functionality");
+            PluginLogger.LogToFile(LogLevel.Information, "API", "Testing Shoko anime search functionality");
+
+            var searchResults = await shokoClient.SearchSeriesByNameAsync("Attack on Titan", request.ShokoServerUrl, request.ShokoApiKey);
+
+            var message = $"Success! Shoko server is connected and accessible. Found {searchResults.Count} results for test search. Check the plugin logs for detailed information.";
+            _logger.LogInformation("API: Shoko test completed successfully - {ResultCount} search results", searchResults.Count);
+            PluginLogger.LogToFile(LogLevel.Information, "API", "Shoko test completed successfully - {0} search results", searchResults.Count);
+
+            return Ok(new TestConnectionResult 
+            { 
+                Success = true, 
+                Message = message,
+                EntriesCount = searchResults.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            var error = $"Shoko test failed with exception: {ex.Message}";
+            _logger.LogError(ex, "API: Shoko connection test failed");
+            PluginLogger.LogToFile(LogLevel.Error, "API", ex, "Shoko connection test failed");
+            return Ok(new TestConnectionResult { Success = false, Message = error });
+        }
+    }
 }
 
 /// <summary>
@@ -297,4 +379,13 @@ public class TestConnectionResult
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public int? EntriesCount { get; set; }
+}
+
+/// <summary>
+/// Shoko test request
+/// </summary>
+public class ShokoTestRequest
+{
+    public string ShokoServerUrl { get; set; } = string.Empty;
+    public string? ShokoApiKey { get; set; }
 }
