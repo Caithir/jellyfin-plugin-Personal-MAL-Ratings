@@ -1,75 +1,53 @@
-{
-    "guid":  "85E35A5A-8C2D-4F3A-9B1E-7F8D6C4E2A91",
-    "name":  "Personal MAL Ratings",
-    "description":  "Overwrites community ratings with your personal MyAnimeList anime ratings",
-    "overview":  "This plugin fetches your personal anime ratings from MyAnimeList and uses them to override the community ratings in Jellyfin for your anime library. Features include OAuth2 authentication, intelligent anime matching, comprehensive logging, and real-time testing tools.",
-    "owner":  "jellyfin-plugin-personal-mal-ratings",
-    "category":  "Metadata",
-    "imageUrl":  "https://raw.githubusercontent.com/Caithir/jellyfin-plugin-personal-mal-ratings/main/icon.png",
-    "versions":  [
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.7",
-                         "checksum":  "434E7DF619E9C428042D24C4D2C343EC",
-                         "timestamp":  "2025-08-20T11:10:06.8057596Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.7/jellyfin-plugin-personal-mal-ratings_1.4.0.7.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.6",
-                         "checksum":  "BB02E2172F582747800CA1CDB2C5BE53",
-                         "timestamp":  "2025-08-19T01:07:24.7184019Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.6/jellyfin-plugin-personal-mal-ratings_1.4.0.6.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.5",
-                         "checksum":  "229B72FC92E09713B05098485B9DB87C",
-                         "timestamp":  "2025-08-19T00:59:19.4701844Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.5/jellyfin-plugin-personal-mal-ratings_1.4.0.5.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.4",
-                         "checksum":  "5E8F69A7346AB84F9F6EFF9DC0B65D64",
-                         "timestamp":  "2025-08-19T00:52:21.2962709Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.4/jellyfin-plugin-personal-mal-ratings_1.4.0.4.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.3",
-                         "checksum":  "F702F10D683812CBFBC7ACB68E544235",
-                         "timestamp":  "2025-08-17T17:46:33.3553344Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.3/jellyfin-plugin-personal-mal-ratings_1.4.0.3.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.2",
-                         "checksum":  "2F08168CB9850CDDA44490AA063B7813",
-                         "timestamp":  "2025-08-17T12:49:03.8436143Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.2/jellyfin-plugin-personal-mal-ratings_1.4.0.2.zip"
-                     },
-                     {
-                         "changelog":  "Automated build with incremental improvements",
-                         "version":  "1.4.0.1",
-                         "checksum":  "4C78B05F0B9ED6C988E96371ECD474CF",
-                         "timestamp":  "2025-08-17T12:43:45.2030536Z",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.1/jellyfin-plugin-personal-mal-ratings_1.4.0.1.zip"
-                     },
-                     {
-                         "version":  "1.4.0.0",
-                         "changelog":  "Enhanced metadata updates with database persistence, comprehensive logging, and web-based testing tools",
-                         "targetAbi":  "10.10.7.0",
-                         "sourceUrl":  "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.0/jellyfin-plugin-personal-mal-ratings_1.4.0.0.zip",
-                         "checksum":  "5AAFE46937528B2358A095CCBFA8E4D7",
-                         "timestamp":  "2025-01-17T00:00:00.0000000Z"
-                     }
-                 ]
-}
+[
+  {
+    "guid": "85E35A5A-8C2D-4F3A-9B1E-7F8D6C4E2A91",
+    "name": "Personal MAL Ratings",
+    "description": "Overwrites community ratings with your personal MyAnimeList anime ratings",
+    "overview": "This plugin fetches your personal anime ratings from MyAnimeList and uses them to override the community ratings in Jellyfin for your anime library. Features include OAuth2 authentication, intelligent anime matching, comprehensive logging, and real-time testing tools.",
+    "owner": "jellyfin-plugin-personal-mal-ratings",
+    "category": "Metadata",
+    "imageUrl": "https://raw.githubusercontent.com/Caithir/jellyfin-plugin-personal-mal-ratings/main/icon.png",
+    "versions": [
+      {
+        "changelog": "Added proper rate limiting for Jikan API calls",
+        "version": "1.4.0.7",
+        "checksum": "434E7DF619E9C428042D24C4D2C343EC",
+        "timestamp": "2025-08-20T11:10:06.8057596Z",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.7/jellyfin-plugin-personal-mal-ratings_1.4.0.7.zip"
+      },
+      {
+        "changelog": "Implemented unmatched shows handling",
+        "version": "1.4.0.6",
+        "checksum": "BB02E2172F582747800CA1CDB2C5BE53",
+        "timestamp": "2025-08-19T01:07:24.7184019Z",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.6/jellyfin-plugin-personal-mal-ratings_1.4.0.6.zip"
+      },
+      {
+        "changelog": "Enhanced Shoko integration and unrated shows support",
+        "version": "1.4.0.5",
+        "checksum": "229B72FC92E09713B05098485B9DB87C",
+        "timestamp": "2025-08-19T00:59:19.4701844Z",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.5/jellyfin-plugin-personal-mal-ratings_1.4.0.5.zip"
+      },
+      {
+        "changelog": "Added Shoko Server integration for accurate anime identification",
+        "version": "1.4.0.4",
+        "checksum": "5E8F69A7346AB84F9F6EFF9DC0B65D64",
+        "timestamp": "2025-08-19T00:52:21.2962709Z",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.4/jellyfin-plugin-personal-mal-ratings_1.4.0.4.zip"
+      },
+      {
+        "changelog": "Comprehensive logging and web interface enhancements",
+        "version": "1.4.0.0",
+        "checksum": "5AAFE46937528B2358A095CCBFA8E4D7",
+        "timestamp": "2025-01-17T00:00:00.0000000Z",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.0/jellyfin-plugin-personal-mal-ratings_1.4.0.0.zip"
+      }
+    ]
+  }
+]
