@@ -14,7 +14,7 @@
         "checksum": "434E7DF619E9C428042D24C4D2C343EC",
         "timestamp": "2025-08-20T11:10:06.8057596Z",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-personal-mal-ratings/releases/download/v1.4.0.7/jellyfin-plugin-personal-mal-ratings_1.4.0.7.zip"
+        "sourceUrl": "https://github.com/Caithir/jellyfin-plugin-Personal-MAL-Ratings/releases/download/v1.4.07/jellyfin-plugin-personal-mal-ratings_1.4.0.7.zip"
       },
       {
         "changelog": "Implemented unmatched shows handling",
